@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <cstdio>
 #include "catpad.h"
 
 using namespace std;
@@ -10,22 +11,37 @@ using namespace std;
 enum OutputType {
 	BIN,
 	TXTBIN,
-	TXTDEC,
 	TXTHEX
 };
 
 static map<string, WORD> labels;
 
+const char HEX_MAP[17] = "0123456789ABCDEF";
+
 int main(int argc, char** argv){
 	OutputType out_type = BIN;
+	bool error = false;
+	char* out;
 	if(argc > 1){
 		if(strcmp(argv[1], "-tb") == 0)
 			out_type = TXTBIN;
-		else if(strcmp(argv[1], "-td") == 0)
-			out_type = TXTDEC;
 		else if(strcmp(argv[1], "-th") == 0)
 			out_type = TXTHEX;
+		else if(strcmp(argv[1], "-b") == 0){
+			if(argc < 3)
+				error = true;
+			else
+				out = argv[2];
+		} else
+			error = true;
+	} else{
+		error = true;
 	}
+	if(error){
+		cout << "Usage: catass [-tb|-th|-b output_file]" << endl;
+		return 1;
+	}
+
 	string line;
 	vector<vector<string> > token_list;
 	WORD address = 0;
@@ -57,12 +73,33 @@ int main(int argc, char** argv){
 		}
 	}
 	int line_n = token_list.size();
+
+	FILE* out_s;
+	
+	if(out_type == BIN)
+		out_s = fopen(out, "wb");
+
 	for(int i = 0; i < line_n; i ++){
 		WORD inst = Instruction(token_list[i], labels, i).getCode();
-		for(int j = 15; j >= 0; j --)
-			cout << ((inst >> j) & 1);
-		cout << endl;
+		switch(out_type){
+			case BIN:
+				fwrite(&inst, sizeof(WORD), 1, out_s);
+				break;
+			case TXTBIN:
+				for(int j = 15; j >= 0; j --)
+					cout << ((inst >> j) & 1);
+				cout << endl;
+				break;
+			case TXTHEX:
+				for(int j = 12; j >= 0; j -= 4)
+					cout << HEX_MAP[(inst >> j) & 15];
+				cout << endl;
+				break;
+		}
 	}
+
+	if(out_type == BIN)
+		fclose(out_s);
 
 	return 0;
 }
