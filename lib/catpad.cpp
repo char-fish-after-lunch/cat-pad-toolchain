@@ -1,4 +1,5 @@
 #include "catpad.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -35,38 +36,46 @@ inline bool is_identifier(const string& token){
 	return token[0] < '0' || token[0] > '9'; // not a number
 }
 
+inline string gen_upper(const string& s){
+	string res = s;
+	transform(res.begin(), res.end(), res.begin(), ptr_fun<int, int>(toupper));
+	return res;
+}
+
 static WORD parse_register(const string& s){
 	WORD n = 0;
-	int len = s.length();
+	string upper_s = gen_upper(s);
+	int len = upper_s.length();
 	for(int i = 1; i < len; i ++)
-		n = n * 10 + (s[i] - '0');
+		n = n * 10 + (upper_s[i] - '0');
 	return n;
 }
 
 static WORD parse_immediate(const string& s){
-	int len = s.length();
+	string upper_s = gen_upper(s);
+	int len = upper_s.length();
 	int t = 0; // decimal
 	if(len > 2){
-		if(s[0] == '0' && s[1] == 'x')
+		if(upper_s[0] == '0' && upper_s[1] == 'X')
 			t = 1; // hexadecimal
-		else if(s[0] == '0' && s[1] == 'b')
+		else if(upper_s[0] == '0' && upper_s[1] == 'B')
 			t = 2; // binary
 	}
 	
 	WORD n = 0;
 	if(t == 0){
 		for(int i = 0; i < len; i ++)
-			n = n * 10 + (s[i] - '0');
+			n = n * 10 + (upper_s[i] - '0');
 	} else if(t == 1){
 		for(int i = 2; i < len; i ++){
-			if(s[i] >= '0' && s[i] <= '9')
-				n = n * 16 + (s[i] - '0');
+			if(upper_s[i] >= '0' && upper_s[i] <= '9')
+				n = n * 16 + (upper_s[i] - '0');
 			else
-				n = n * 16 + (s[i] - 'a' + 10);
+				n = n * 16 + (upper_s[i] - 'A' + 10);
 		}
 	} else if(t == 2){
 		for(int i = 2; i < len; i ++)
-			n = (n << 1) | (s[i] - '0');
+			n = (n << 1) | (upper_s[i] - '0');
 	}
 	return n;
 }
