@@ -25,7 +25,7 @@ const WORD INSTR_H_GROUP5 = 0b00110;
 
 inline bool look_up_label(const map<string, WORD>& labels, const string& l, WORD& res){
 	if(labels.find(l) != labels.end()){
-		res = labels[l];
+		res = labels.at(l);
 		return true;
 	}
 	return false;
@@ -74,7 +74,7 @@ static WORD parse_immediate(const string& s){
 static WORD parse_address(const string& s, const map<string, WORD>& labels, WORD c_addr){
 	WORD res;
 	if(is_identifier(s)){
-		look_up_labels(labels, s, res);
+		look_up_label(labels, s, res);
 		res -= c_addr + 1;
 	} else
 		res = parse_immediate(s);
@@ -97,15 +97,15 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 		inst_code |= (parse_immediate(tokens[3]) & 0b1111);
 	} else if(rec == "B"){
 		inst_code |= INSTR_H_B << 11;
-		inst_code |= (parse_address(tokens[1]) & ((1 << 11) - 1));
+		inst_code |= (parse_address(tokens[1], labels, address) & ((1 << 11) - 1));
 	} else if(rec == "BEQZ"){
 		inst_code |= INSTR_H_BEQZ << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_address(tokens[2]) & 0b11111111);
+		inst_code |= (parse_address(tokens[2], labels, address) & 0b11111111);
 	} else if(rec == "BNEZ"){
 		inst_code |= INSTR_H_BNEZ << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_address(tokens[2]) & 0b11111111);
+		inst_code |= (parse_address(tokens[2], labels, address) & 0b11111111);
 	} else if(rec == "LI"){
 		inst_code |= INSTR_H_LI << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
@@ -132,7 +132,7 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 		inst_code |= (parse_immediate(tokens[2]) & 0b11111111);
 	} else if(rec == "INT"){
 		inst_code |= INSTR_H_INT << 11;
-		inst_code |= parse_immedate(tokens[1]) & 0b1111;
+		inst_code |= parse_immediate(tokens[1]) & 0b1111;
 	} else if(rec == "ERET"){
 		inst_code |= INSTR_H_ERET << 11;
 	} else if(rec == "AND"){
@@ -175,7 +175,7 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 	} else if(rec == "BTEQZ"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b000 << 8;
-		inst_code |= (parse_address(tokens[1]) & 0b11111111);
+		inst_code |= (parse_address(tokens[1], labels, address) & 0b11111111);
 	} else if(rec == "ADDSP"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b011 << 8;
@@ -183,7 +183,7 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 	} else if(rec == "BTNEZ"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b001 << 8;
-		inst_code |= (parse_address(tokens[1]) & 0b11111111);
+		inst_code |= (parse_address(tokens[1], labels, address) & 0b11111111);
 	} else if(rec == "ADDU"){
 		inst_code |= INSTR_H_GROUP3 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
