@@ -35,6 +35,53 @@ inline bool is_identifier(const string& token){
 	return token[0] < '0' || token[0] > '9'; // not a number
 }
 
+static WORD parse_register(const string& s){
+	WORD n = 0;
+	int len = s.length();
+	for(int i = 1; i < len; i ++)
+		n = n * 10 + (s[i] - '0');
+	return n;
+}
+
+static WORD parse_immediate(const string& s){
+	int len = s.length();
+	int t = 0; // decimal
+	if(len > 2){
+		if(s[0] == '0' && s[1] == 'x')
+			t = 1; // hexadecimal
+		else if(s[0] == '0' && s[1] == 'b')
+			t = 2; // binary
+	}
+	
+	WORD n = 0;
+	if(t == 0){
+		for(int i = 0; i < len; i ++)
+			n = n * 10 + (s[i] - '0');
+	} else if(t == 1){
+		for(int i = 2; i < len; i ++){
+			if(s[i] >= '0' && s[i] <= '9')
+				n = n * 16 + (s[i] - '0');
+			else
+				n = n * 16 + (s[i] - 'a' + 10);
+		}
+	} else if(t == 2){
+		for(int i = 2; i < len; i ++)
+			n = (n << 1) | (s[i] - '0');
+	}
+	return n;
+}
+
+static WORD parse_address(const string& s, const map<string, WORD>& labels, WORD c_addr){
+	WORD res;
+	if(is_identifier(s)){
+		look_up_labels(labels, s, res);
+		res -= c_addr + 1;
+	} else
+		res = parse_immediate(s);
+
+	return res;
+}
+
 Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& labels, WORD address){
 	inst_code = 0;
 
@@ -50,15 +97,15 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 		inst_code |= (parse_immediate(tokens[3]) & 0b1111);
 	} else if(rec == "B"){
 		inst_code |= INSTR_H_B << 11;
-		inst_code |= (parse_immediate(tokens[1]) & ((1 << 11) - 1));
+		inst_code |= (parse_address(tokens[1]) & ((1 << 11) - 1));
 	} else if(rec == "BEQZ"){
 		inst_code |= INSTR_H_BEQZ << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_immediate(tokens[2]) & 0b11111111);
+		inst_code |= (parse_address(tokens[2]) & 0b11111111);
 	} else if(rec == "BNEZ"){
 		inst_code |= INSTR_H_BNEZ << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_immediate(tokens[2]) & 0b11111111);
+		inst_code |= (parse_address(tokens[2]) & 0b11111111);
 	} else if(rec == "LI"){
 		inst_code |= INSTR_H_LI << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
@@ -128,7 +175,7 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 	} else if(rec == "BTEQZ"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b000 << 8;
-		inst_code |= (parse_immediate(tokens[1]) & 0b11111111);
+		inst_code |= (parse_address(tokens[1]) & 0b11111111);
 	} else if(rec == "ADDSP"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b011 << 8;
@@ -136,7 +183,7 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 	} else if(rec == "BTNEZ"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b001 << 8;
-		inst_code |= (parse_immediate(tokens[1]) & 0b11111111);
+		inst_code |= (parse_address(tokens[1]) & 0b11111111);
 	} else if(rec == "ADDU"){
 		inst_code |= INSTR_H_GROUP3 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
@@ -189,9 +236,7 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 }
 
 vector<string> Instruction::getTokens(const map<string, WORD>& labels, WORD address){
-	switch(code >> 11){
-		
-	}
+	return vector<string>();
 }
 
 
