@@ -176,6 +176,11 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
 		inst_code |= 0b00011;
+	} else if(rec == "SLT"){
+		inst_code |= INSTR_H_GROUP1 << 11;
+		inst_code |= (parse_register(tokens[1]) & 7) << 8;
+		inst_code |= (parse_register(tokens[2]) & 7) << 5;
+		inst_code |= 0b00010;
 	} else if(rec == "SRLV"){
 		inst_code |= INSTR_H_GROUP1 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
@@ -193,6 +198,10 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b001 << 8;
 		inst_code |= (parse_address(tokens[1], labels, address) & 0b11111111);
+	} else if(rec == "MTSP"){
+		inst_code |= INSTR_H_GROUP2 << 11;
+		inst_code |= 0b100 << 8;
+		inst_code |= (parse_register(tokens[1]) & 7) << 5;
 	} else if(rec == "ADDU"){
 		inst_code |= INSTR_H_GROUP3 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
@@ -228,18 +237,18 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 		inst_code |= INSTR_H_GROUP5 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (parse_immediate(tokens[2]) & 7) << 2;
+		inst_code |= (parse_immediate(tokens[3]) & 7) << 2;
 	} else if(rec == "SRL"){
 		inst_code |= INSTR_H_GROUP5 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (parse_immediate(tokens[2]) & 7) << 2;
+		inst_code |= (parse_immediate(tokens[3]) & 7) << 2;
 		inst_code |= 0b10;
 	} else if(rec == "SRA"){
 		inst_code |= INSTR_H_GROUP5 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (parse_immediate(tokens[2]) & 7) << 2;
+		inst_code |= (parse_immediate(tokens[3]) & 7) << 2;
 		inst_code |= 0b11;
 	}
 }
