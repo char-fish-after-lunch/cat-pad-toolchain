@@ -1,1 +1,6 @@
 *.data
+.vscode/
+*.exe
+*.txt
+*.jpg
+
