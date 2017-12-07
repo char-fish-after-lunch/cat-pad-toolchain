@@ -18,6 +18,24 @@ static map<string, WORD> labels;
 
 const char HEX_MAP[17] = "0123456789ABCDEF";
 
+static void printInstruction(WORD inst, OutputType out_type, FILE* out_s){
+    switch(out_type){
+        case BIN:
+            fwrite(&inst, sizeof(WORD), 1, out_s);
+            break;
+        case TXTBIN:
+            for(int j = 15; j >= 0; j --)
+                cout << ((inst >> j) & 1);
+            cout << endl;
+            break;
+        case TXTHEX:
+            for(int j = 12; j >= 0; j -= 4)
+                cout << HEX_MAP[(inst >> j) & 15];
+            cout << endl;
+            break;
+    }
+}
+
 int main(int argc, char** argv){
 	OutputType out_type = BIN;
 	bool error = false;
@@ -65,7 +83,18 @@ int main(int argc, char** argv){
 		len = line_tokens.size();
 		if(len == 0)
 			continue;
-		if(line_tokens[0].back() == ':')
+        if(line_tokens[0] == ".word"){
+            address += len - 1;
+            token_list.push_back(line_tokens);
+        } else if(line_tokens[0] == ".pad"){
+            address += parse_immediate(line_tokens[1]);
+            token_list.push_back(line_tokens);
+        } else if(line_tokens[0] == ".ascii"){
+            address += len - 2;
+            for(int i = 1; i < len; i ++)
+                address += line_tokens[i].length();
+            token_list.push_back(line_tokens);
+        } else if(line_tokens[0].back() == ':')
 			labels[line_tokens[0].substr(0, line_tokens[0].length() - 1)] = address;
 		else{
 			token_list.push_back(line_tokens);
@@ -79,23 +108,35 @@ int main(int argc, char** argv){
 	if(out_type == BIN)
 		out_s = fopen(out, "wb");
 
-	for(int i = 0; i < line_n; i ++){
-		WORD inst = Instruction(token_list[i], labels, i).getCode();
-		switch(out_type){
-			case BIN:
-				fwrite(&inst, sizeof(WORD), 1, out_s);
-				break;
-			case TXTBIN:
-				for(int j = 15; j >= 0; j --)
-					cout << ((inst >> j) & 1);
-				cout << endl;
-				break;
-			case TXTHEX:
-				for(int j = 12; j >= 0; j -= 4)
-					cout << HEX_MAP[(inst >> j) & 15];
-				cout << endl;
-				break;
-		}
+    address = 0;
+    for(vector<string> line_tokens : token_list){
+        int len = line_tokens.size();
+        if(line_tokens[0] == ".word"){
+            // put the words into this instruction position
+            for(int j = 1; j < len; j ++){
+                printInstruction(parse_immediate(line_tokens[j]), out_type, out_s);
+                ++ address;
+            }
+        } else if(line_tokens[0] == ".pad"){
+            unsigned short pad_cnt = parse_immediate(line_tokens[1]);
+            for(int j = 0; j < pad_cnt; j ++)
+                printInstruction(0, out_type, out_s);
+            address += pad_cnt;
+        } else if(line_tokens[0] == ".ascii"){
+            for(int j = 1; j < len; j ++){
+                if(j > 1){
+                    printInstruction((unsigned short)' ', out_type, out_s);
+                    ++ address;
+                }
+                for(char k : line_tokens[j]){
+                    printInstruction((unsigned short)k, out_type, out_s);
+                    ++ address;
+                }
+            }            
+        } else{
+            printInstruction(Instruction(line_tokens, labels, address).getCode(),\
+                out_type, out_s);
+        }
 	}
 
 	if(out_type == BIN)

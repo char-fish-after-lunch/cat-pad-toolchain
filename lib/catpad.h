@@ -7,6 +7,9 @@
 
 typedef unsigned short WORD;
 
+
+extern WORD parse_immediate(const std::string& s);
+
 class Instruction{
 	private:
 		WORD inst_code;

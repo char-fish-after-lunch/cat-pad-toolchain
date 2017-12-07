@@ -52,7 +52,7 @@ static WORD parse_register(const string& s){
 	return n;
 }
 
-static WORD parse_immediate(const string& s){
+WORD parse_immediate(const string& s){
 	string upper_s = gen_upper(s);
 	int len = upper_s.length();
 	int t = 0; // decimal
@@ -84,13 +84,20 @@ static WORD parse_immediate(const string& s){
 static WORD parse_address(const string& s, const map<string, WORD>& labels, WORD c_addr){
 	WORD res;
 	if(is_identifier(s)){
-		look_up_label(labels, s, res);
-		res -= c_addr + 1;
+        if(s[0] == '@'){
+            // absolute address
+            look_up_label(labels, s.substr(1, s.length() - 1), res);
+        } else{
+            look_up_label(labels, s, res);
+            res -= c_addr + 1;
+        }
 	} else
 		res = parse_immediate(s);
 
 	return res;
 }
+
+#define IMME(x) (parse_address(x, labels, address))
 
 Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& labels, WORD address){
 	inst_code = 0;
@@ -99,12 +106,12 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 	if(rec == "ADDIU"){
 		inst_code |= INSTR_H_ADDIU << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_immediate(tokens[2]) & 0b11111111);
+		inst_code |= (IMME(tokens[2]) & 0b11111111);
 	} else if(rec == "ADDIU3"){
 		inst_code |= INSTR_H_ADDIU3 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (parse_immediate(tokens[3]) & 0b1111);
+		inst_code |= (IMME(tokens[3]) & 0b1111);
 	} else if(rec == "B"){
 		inst_code |= INSTR_H_B << 11;
 		inst_code |= (parse_address(tokens[1], labels, address) & ((1 << 11) - 1));
@@ -119,30 +126,30 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 	} else if(rec == "LI"){
 		inst_code |= INSTR_H_LI << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_immediate(tokens[2]) & 0b11111111);
+		inst_code |= (IMME(tokens[2]) & 0b11111111);
 	} else if(rec == "LW"){
 		inst_code |= INSTR_H_LW << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (parse_immediate(tokens[3]) & 0b11111);
+		inst_code |= (IMME(tokens[3]) & 0b11111);
 	} else if(rec == "LW_SP"){
 		inst_code |= INSTR_H_LW_SP << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_immediate(tokens[2]) & 0b11111111);
+		inst_code |= (IMME(tokens[2]) & 0b11111111);
 	} else if(rec == "NOP"){
 		inst_code |= INSTR_H_NOP << 11;
 	} else if(rec == "SW"){
 		inst_code |= INSTR_H_SW << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (parse_immediate(tokens[3]) & 0b11111);
+		inst_code |= (IMME(tokens[3]) & 0b11111);
 	} else if(rec == "SW_SP"){
 		inst_code |= INSTR_H_SW_SP << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_immediate(tokens[2]) & 0b11111111);
+		inst_code |= (IMME(tokens[2]) & 0b11111111);
 	} else if(rec == "INT"){
 		inst_code |= INSTR_H_INT << 11;
-		inst_code |= parse_immediate(tokens[1]) & 0b1111;
+		inst_code |= IMME(tokens[1]) & 0b1111;
 	} else if(rec == "ERET"){
 		inst_code |= INSTR_H_ERET << 11;
 	} else if(rec == "AND"){
@@ -194,7 +201,7 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 	} else if(rec == "ADDSP"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b011 << 8;
-		inst_code |= (parse_immediate(tokens[1]) & 0b11111111);
+		inst_code |= (IMME(tokens[1]) & 0b11111111);
 	} else if(rec == "BTNEZ"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b001 << 8;
@@ -238,23 +245,23 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 		inst_code |= INSTR_H_GROUP5 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (parse_immediate(tokens[3]) & 7) << 2;
+		inst_code |= (IMME(tokens[3]) & 7) << 2;
 	} else if(rec == "SRL"){
 		inst_code |= INSTR_H_GROUP5 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (parse_immediate(tokens[3]) & 7) << 2;
+		inst_code |= (IMME(tokens[3]) & 7) << 2;
 		inst_code |= 0b10;
 	} else if(rec == "SRA"){
 		inst_code |= INSTR_H_GROUP5 << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (parse_immediate(tokens[3]) & 7) << 2;
+		inst_code |= (IMME(tokens[3]) & 7) << 2;
 		inst_code |= 0b11;
 	} else if(rec == "CMPI"){
         inst_code |= INSTR_H_CMPI << 11;
         inst_code |= (parse_register(tokens[1]) & 7) << 8;
-        inst_code |= (parse_immediate(tokens[2]) & 0b11111111);
+        inst_code |= (IMME(tokens[2]) & 0b11111111);
     }
 }
 
