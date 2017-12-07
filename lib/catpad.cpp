@@ -16,6 +16,7 @@ const WORD INSTR_H_SW = 0b11011;
 const WORD INSTR_H_SW_SP = 0b11010;
 const WORD INSTR_H_INT = 0b11111;
 const WORD INSTR_H_ERET = 0b00011;
+const WORD INSTR_H_CMPI = 0b01110;
 
 const WORD INSTR_H_GROUP1 = 0b11101;
 const WORD INSTR_H_GROUP2 = 0b01100;
@@ -250,7 +251,11 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 		inst_code |= (parse_register(tokens[2]) & 7) << 5;
 		inst_code |= (parse_immediate(tokens[3]) & 7) << 2;
 		inst_code |= 0b11;
-	}
+	} else if(rec == "CMPI"){
+        inst_code |= INSTR_H_CMPI << 11;
+        inst_code |= (parse_register(tokens[1]) & 7) << 8;
+        inst_code |= (parse_immediate(tokens[2]) & 0b11111111);
+    }
 }
 
 vector<string> Instruction::getTokens(const map<string, WORD>& labels, WORD address){
