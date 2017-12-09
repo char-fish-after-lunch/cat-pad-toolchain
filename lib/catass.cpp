@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 #include <cstdio>
 #include "catpad.h"
 
@@ -96,7 +97,10 @@ int main(int argc, char** argv){
             token_list.push_back(line_tokens);
         } else if(line_tokens[0].back() == ':')
 			labels[line_tokens[0].substr(0, line_tokens[0].length() - 1)] = address;
-		else{
+        else if(gen_upper(line_tokens[0]) == "LLI"){
+            token_list.push_back(line_tokens);
+            address += 4;
+        } else{
 			token_list.push_back(line_tokens);
 			++ address;
 		}
@@ -133,6 +137,20 @@ int main(int argc, char** argv){
                     ++ address;
                 }
             }            
+        } else if(gen_upper(line_tokens[0]) == "LLI"){
+            char sn[20];
+            WORD imme = parse_address(line_tokens[2], labels, address);
+            sprintf(sn, "%u", (imme) >> 8);
+            printInstruction(Instruction(vector<string>({"LI", line_tokens[1], sn}), labels, address).getCode(),
+                    out_type, out_s);
+            printInstruction(Instruction(vector<string>({"SLL", line_tokens[1], line_tokens[1], "0x0000"}), labels, address).getCode(),
+                        out_type, out_s);
+            sprintf(sn, "%u", imme & 0b11111111);
+            printInstruction(Instruction(vector<string>({"LI", "R6", sn}), labels, address).getCode(),
+                    out_type, out_s);
+            printInstruction(Instruction(vector<string>({"ADDU", line_tokens[1], "R6", line_tokens[1]}), labels, address).getCode(),
+                    out_type, out_s);
+            address += 4;
         } else{
             printInstruction(Instruction(line_tokens, labels, address).getCode(),\
                 out_type, out_s);

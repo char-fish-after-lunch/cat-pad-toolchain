@@ -24,26 +24,7 @@ const WORD INSTR_H_GROUP3 = 0b11100;
 const WORD INSTR_H_GROUP4 = 0b11110;
 const WORD INSTR_H_GROUP5 = 0b00110;
 
-
-inline bool look_up_label(const map<string, WORD>& labels, const string& l, WORD& res){
-	if(labels.find(l) != labels.end()){
-		res = labels.at(l);
-		return true;
-	}
-	return false;
-}
-
-inline bool is_identifier(const string& token){
-	return token[0] < '0' || token[0] > '9'; // not a number
-}
-
-inline string gen_upper(const string& s){
-	string res = s;
-	transform(res.begin(), res.end(), res.begin(), ptr_fun<int, int>(toupper));
-	return res;
-}
-
-static WORD parse_register(const string& s){
+WORD parse_register(const string& s){
 	WORD n = 0;
 	string upper_s = gen_upper(s);
 	int len = upper_s.length();
@@ -81,7 +62,7 @@ WORD parse_immediate(const string& s){
 	return n;
 }
 
-static WORD parse_address(const string& s, const map<string, WORD>& labels, WORD c_addr){
+WORD parse_address(const string& s, const map<string, WORD>& labels, WORD c_addr){
 	WORD res;
 	if(is_identifier(s)){
         if(s[0] == '@'){
