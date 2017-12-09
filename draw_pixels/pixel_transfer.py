@@ -1,5 +1,5 @@
-f = open("catfish_icon.dat", "r")
-data_out = open("./catfish_icon_16.dat", "w")
+f = open("catfish.txt", "r")
+data_out = open("./catfish_16.dat", "w")
 
 # for l in f:
 #     array = l.split('=')
@@ -9,7 +9,7 @@ data_out = open("./catfish_icon_16.dat", "w")
 # f.close()
 
 for l in f:
-    n = int(l, base=2)
+    n = int(l)
     output = str(hex(n).replace("0x", ""))
     data_out.write(output + "\n")
 f.close()
