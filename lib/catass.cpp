@@ -136,6 +136,7 @@ int main(int argc, char** argv){
         } else{
             printInstruction(Instruction(line_tokens, labels, address).getCode(),\
                 out_type, out_s);
+            ++ address;
         }
 	}
 
