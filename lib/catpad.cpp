@@ -243,6 +243,14 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
         inst_code |= INSTR_H_CMPI << 11;
         inst_code |= (parse_register(tokens[1]) & 7) << 8;
         inst_code |= (IMME(tokens[2]) & 0b11111111);
+    } else if(rec == "MFT"){
+        inst_code |= INSTR_H_GROUP4 << 1;
+        inst_code |= (parse_register(tokens[1]) & 7) << 8;
+        inst_code |= 0b11110000;
+    } else if(rec == "MTT"){
+        inst_code |= INSTR_H_GROUP4 << 1;
+        inst_code |= (parse_register(tokens[1]) & 7) << 8;
+        inst_code |= 0b11111000;
     }
 }
 
