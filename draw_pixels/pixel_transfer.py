@@ -1,5 +1,5 @@
-f = open("keyboard.dat", "r")
-data_out = open("./keyboard_16.dat", "w")
+f = open("text_icon.dat", "r")
+data_out = open("./text_icon_16.dat", "w")
 
 # for l in f:
 #     array = l.split('=')
