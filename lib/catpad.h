@@ -1,6 +1,7 @@
 #ifndef CATPAD_H
 #define CATPAD_H
 
+#include<cstdio>
 #include<vector>
 #include<string>
 #include<map>
@@ -25,6 +26,7 @@ inline bool look_up_label(const std::map<std::string, WORD>& labels, const std::
 		res = labels.at(l);
 		return true;
 	}
+    fprintf(stderr, "Label %s not found!!!!!!\n", l.c_str());
 	return false;
 }
 

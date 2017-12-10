@@ -95,35 +95,59 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 		inst_code |= (IMME(tokens[3]) & 0b1111);
 	} else if(rec == "B"){
 		inst_code |= INSTR_H_B << 11;
-		inst_code |= (parse_address(tokens[1], labels, address) & ((1 << 11) - 1));
+        WORD addr = parse_address(tokens[1], labels, address);
+        WORD gg = (addr & ((1 << 11) - 1));
+        inst_code |= gg;
+        if((short)addr >= (1 << 10) || (short)addr < -(1 << 10)){
+            for(string t : tokens)
+                fprintf(stderr, "%s ", t.c_str());
+            fprintf(stderr, ": ");
+            fprintf(stderr, "B is not good.\n");
+        }
 	} else if(rec == "BEQZ"){
 		inst_code |= INSTR_H_BEQZ << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_address(tokens[2], labels, address) & 0b11111111);
+        WORD addr = parse_address(tokens[2], labels, address);
+        WORD gg = (addr & ((1 << 8) - 1));
+        inst_code |= gg;
+        if((short)addr >= (1 << 7) || (short)addr < -(1 << 7)){
+            for(string t : tokens)
+                fprintf(stderr, "%s ", t.c_str());
+            fprintf(stderr, ": ");
+            fprintf(stderr, "BEQZ is not good.\n");
+        }
 	} else if(rec == "BNEZ"){
 		inst_code |= INSTR_H_BNEZ << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_address(tokens[2], labels, address) & 0b11111111);
-	} else if(rec == "LI"){
-		inst_code |= INSTR_H_LI << 11;
-		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (IMME(tokens[2]) & 0b11111111);
-	} else if(rec == "LW"){
-		inst_code |= INSTR_H_LW << 11;
-		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (IMME(tokens[3]) & 0b11111);
-	} else if(rec == "LW_SP"){
-		inst_code |= INSTR_H_LW_SP << 11;
-		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (IMME(tokens[2]) & 0b11111111);
-	} else if(rec == "NOP"){
-		inst_code |= INSTR_H_NOP << 11;
-	} else if(rec == "SW"){
-		inst_code |= INSTR_H_SW << 11;
-		inst_code |= (parse_register(tokens[1]) & 7) << 8;
-		inst_code |= (parse_register(tokens[2]) & 7) << 5;
-		inst_code |= (IMME(tokens[3]) & 0b11111);
+        WORD addr = parse_address(tokens[2], labels, address);
+        WORD gg = (addr & ((1 << 8) - 1));
+        inst_code |= gg;
+        if((short)addr >= (1 << 7) || (short)addr < -(1 << 7)){
+            for(string t : tokens)
+                fprintf(stderr, "%s ", t.c_str());
+            fprintf(stderr, ": ");
+            fprintf(stderr, "BNEZ is not good.\n");
+        }
+    } else if(rec == "LI"){
+        inst_code |= INSTR_H_LI << 11;
+        inst_code |= (parse_register(tokens[1]) & 7) << 8;
+        inst_code |= (IMME(tokens[2]) & 0b11111111);
+    } else if(rec == "LW"){
+        inst_code |= INSTR_H_LW << 11;
+        inst_code |= (parse_register(tokens[1]) & 7) << 8;
+        inst_code |= (parse_register(tokens[2]) & 7) << 5;
+        inst_code |= (IMME(tokens[3]) & 0b11111);
+    } else if(rec == "LW_SP"){
+        inst_code |= INSTR_H_LW_SP << 11;
+        inst_code |= (parse_register(tokens[1]) & 7) << 8;
+        inst_code |= (IMME(tokens[2]) & 0b11111111);
+    } else if(rec == "NOP"){
+        inst_code |= INSTR_H_NOP << 11;
+    } else if(rec == "SW"){
+        inst_code |= INSTR_H_SW << 11;
+        inst_code |= (parse_register(tokens[1]) & 7) << 8;
+        inst_code |= (parse_register(tokens[2]) & 7) << 5;
+        inst_code |= (IMME(tokens[3]) & 0b11111);
 	} else if(rec == "SW_SP"){
 		inst_code |= INSTR_H_SW_SP << 11;
 		inst_code |= (parse_register(tokens[1]) & 7) << 8;
@@ -178,7 +202,15 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 	} else if(rec == "BTEQZ"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b000 << 8;
-		inst_code |= (parse_address(tokens[1], labels, address) & 0b11111111);
+        WORD addr = parse_address(tokens[1], labels, address);
+        WORD gg = (addr & ((1 << 8) - 1));
+        inst_code |= gg;
+        if((short)addr >= (1 << 7) || (short)addr < -(1 << 7)){
+            for(string t : tokens)
+                fprintf(stderr, "%s ", t.c_str());
+            fprintf(stderr, ": ");
+            fprintf(stderr, "BTEQZ is not good.\n");
+        }
 	} else if(rec == "ADDSP"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b011 << 8;
@@ -186,7 +218,15 @@ Instruction::Instruction(const vector<string>& tokens, const map<string, WORD>& 
 	} else if(rec == "BTNEZ"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b001 << 8;
-		inst_code |= (parse_address(tokens[1], labels, address) & 0b11111111);
+        WORD addr = parse_address(tokens[1], labels, address);
+        WORD gg = (addr & ((1 << 8) - 1));
+        inst_code |= gg;
+        if((short)addr >= (1 << 7) || (short)addr < -(1 << 7)){
+            for(string t : tokens)
+                fprintf(stderr, "%s ", t.c_str());
+            fprintf(stderr, ": ");
+            fprintf(stderr, "BTNEZ is not good.\n");
+        }
 	} else if(rec == "MTSP"){
 		inst_code |= INSTR_H_GROUP2 << 11;
 		inst_code |= 0b100 << 8;
